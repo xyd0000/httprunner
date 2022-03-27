@@ -89,15 +89,20 @@ def uniform_validator(validator):
         comparator = list(validator.keys())[0]
         compare_values = validator[comparator]
 
-        if not isinstance(compare_values, list) or len(compare_values) not in [2, 3]:
+        if not isinstance(compare_values, list) or len(compare_values) not in [2, 3, 4]:
             raise ParamsError(f"invalid validator: {validator}")
 
         check_item = compare_values[0]
         expect_value = compare_values[1]
-        if len(compare_values) == 3:
+        if len(compare_values) == 4:
+            exclude_path = compare_values[2]
+            message = compare_values[3]
+        elif len(compare_values) == 3:
+            exclude_path = None
             message = compare_values[2]
         else:
             # len(compare_values) == 2
+            exclude_path = None
             message = ""
 
     else:
@@ -110,6 +115,7 @@ def uniform_validator(validator):
         "check": check_item,
         "expect": expect_value,
         "assert": assert_method,
+        "exclude_path": exclude_path,
         "message": message,
     }
 
@@ -236,6 +242,8 @@ class ResponseObject(object):
             # parse expected value with config/teststep/extracted variables
             expect_value = parse_data(expect_item, variables_mapping, functions_mapping)
 
+            # exclude_path
+            exclude_path = u_validator["exclude_path"]
             # message
             message = u_validator["message"]
             # parse message with config/teststep/extracted variables
@@ -249,11 +257,15 @@ class ResponseObject(object):
                 "check_value": check_value,
                 "expect": expect_item,
                 "expect_value": expect_value,
+                "exclude_path": exclude_path,
                 "message": message,
             }
 
             try:
-                assert_func(check_value, expect_value, message)
+                if exclude_path:
+                    assert_func(check_value, expect_value, exclude_path, message)
+                else:
+                    assert_func(check_value, expect_value, message)
                 validate_msg += "\t==> pass"
                 logger.info(validate_msg)
                 validator_dict["check_result"] = "pass"
@@ -265,6 +277,7 @@ class ResponseObject(object):
                     f"\n"
                     f"check_item: {check_item}\n"
                     f"check_value: {check_value}({type(check_value).__name__})\n"
+                    f"exclude_path: {exclude_path}\n"
                     f"assert_method: {assert_method}\n"
                     f"expect_value: {expect_value}({type(expect_value).__name__})"
                 )

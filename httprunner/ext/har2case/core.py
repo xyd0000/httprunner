@@ -277,12 +277,13 @@ class HarParser(object):
             if not isinstance(resp_content_json, dict):
                 # e.g. ['a', 'b']
                 return
-
-            for key, value in resp_content_json.items():
-                if isinstance(value, (dict, list)):
-                    continue
-
-                teststep_dict["validate"].append({"eq": ["body.{}".format(key), value]})
+            else:
+                for key, value in resp_content_json.items():
+                    if isinstance(value, (dict, list)):
+                        continue
+                    teststep_dict["validate"].append({"eq": [f"body.{key}", value]})
+                # default diff all response content, can use black names (exclude_path param) to ignore
+                teststep_dict["validate"].append({"diff": ["body", resp_content_json]})
 
     def _prepare_teststep(self, entry_json):
         """ extract info from entry dict and make teststep

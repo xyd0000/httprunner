@@ -18,14 +18,17 @@ class TestHar(TestHar2CaseUtils):
         self.assertIn("request", teststep_dict)
         self.assertIn("validate", teststep_dict)
 
-        validators_mapping = {
-            validator["eq"][0]: validator["eq"][1]
-            for validator in teststep_dict["validate"]
-        }
+        validators_mapping = {}
+        for validator in teststep_dict["validate"]:
+            if "eq" in validator:
+                validators_mapping[validator["eq"][0]] = validator["eq"][1]
+            else:
+                validators_mapping[validator["diff"][0]] = validator["diff"][1]
         self.assertEqual(validators_mapping["status_code"], 200)
         self.assertEqual(validators_mapping["body.IsSuccess"], True)
         self.assertEqual(validators_mapping["body.Code"], 200)
         self.assertEqual(validators_mapping["body.Message"], None)
+        self.assertIsInstance(validators_mapping['body'], dict)
 
     def test_prepare_teststeps(self):
         teststeps = self.har_parser._prepare_teststeps()

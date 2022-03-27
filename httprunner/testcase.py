@@ -1,5 +1,5 @@
 import inspect
-from typing import Text, Any, Union, Callable
+from typing import Text, Any, Union, Callable, Set
 
 from httprunner.models import (
     TConfig,
@@ -211,6 +211,14 @@ class StepRequestValidation(object):
     ) -> "StepRequestValidation":
         self.__step_context.validators.append(
             {"type_match": [jmes_path, expected_value, message]}
+        )
+        return self
+
+    def assert_diff(
+        self, jmes_path: Text, expected_value: Any, exclude_path: Set = None, message: Text = ""
+    ) -> "StepRequestValidation":
+        self.__step_context.validators.append(
+            {"diff": [jmes_path, expected_value, exclude_path, message]}
         )
         return self
 
